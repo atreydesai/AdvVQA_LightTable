@@ -24,6 +24,8 @@ export default function TimelineScrubber({ entries, index, onChange, hidden, onT
   const clamped = Math.max(0, Math.min(n - 1, index));
   const pct = n > 1 ? (clamped / (n - 1)) * 100 : 100;
   const entry = entries[clamped] ?? null;
+  const indexRef = useRef(clamped);
+  indexRef.current = clamped;
 
   const posFromClient = useCallback(
     (clientX: number) => {
@@ -38,7 +40,10 @@ export default function TimelineScrubber({ entries, index, onChange, hidden, onT
   useEffect(() => {
     if (!dragging) return;
     const move = (ev: PointerEvent) => onChange(posFromClient(ev.clientX), true);
-    const up = () => setDragging(false);
+    const up = () => {
+      setDragging(false);
+      onChange(indexRef.current, false); // settle: re-enable crossfade
+    };
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
     return () => {
@@ -47,15 +52,17 @@ export default function TimelineScrubber({ entries, index, onChange, hidden, onT
     };
   }, [dragging, onChange, posFromClient]);
 
+  const step = (delta: number) => onChange(clamped + delta, false);
+
   const onKeyDown = (ev: React.KeyboardEvent) => {
     if (ev.key === 'ArrowLeft') {
       ev.preventDefault();
       if (ev.shiftKey) onChange(prevMilestone(entries, clamped), false);
-      else onChange(clamped - 1, false);
+      else step(-1);
     } else if (ev.key === 'ArrowRight') {
       ev.preventDefault();
       if (ev.shiftKey) onChange(nextMilestone(entries, clamped), false);
-      else onChange(clamped + 1, false);
+      else step(1);
     } else if (ev.key === 'Home') {
       ev.preventDefault();
       onChange(0, false);
@@ -65,59 +72,73 @@ export default function TimelineScrubber({ entries, index, onChange, hidden, onT
     }
   };
 
+  // The whole zone is draggable: press anywhere jumps there and starts a drag.
+  const startDrag = (ev: React.PointerEvent) => {
+    ev.preventDefault();
+    onChange(posFromClient(ev.clientX), true);
+    setDragging(true);
+  };
+
   return (
     <div className="scrubber">
-      <div
-        className="track"
-        ref={trackRef}
-        onPointerDown={(ev) => {
-          onChange(posFromClient(ev.clientX), false);
-          setDragging(true);
-        }}
-      >
-        <div className="track-fill" style={{ width: `${pct}%` }} />
-        {entries.map((e, i) => (
+      <div className="track-zone" onPointerDown={startDrag}>
+        <div className="track" ref={trackRef}>
+          <div className="track-fill" style={{ width: `${pct}%` }} />
+          {entries.map((e, i) => (
+            <button
+              key={`${e.t}-${i}`}
+              className={`tmark m-${e.kind}`}
+              style={{ left: n > 1 ? `${(i / (n - 1)) * 100}%` : '100%' }}
+              title={`${e.label} · ${formatTime(e.t)}`}
+              aria-label={e.label}
+              tabIndex={-1}
+            />
+          ))}
           <button
-            key={`${e.t}-${i}`}
-            className={`tmark m-${e.kind}`}
-            style={{ left: n > 1 ? `${(i / (n - 1)) * 100}%` : '100%' }}
-            title={`${e.label} · ${formatTime(e.t)}`}
-            aria-label={e.label}
-            onPointerDown={(ev) => ev.stopPropagation()}
-            onClick={() => onChange(i, false)}
+            className="playhead"
+            style={{ left: `${pct}%` }}
+            role="slider"
+            aria-label="Timeline position"
+            aria-valuemin={0}
+            aria-valuemax={Math.max(0, n - 1)}
+            aria-valuenow={clamped}
+            aria-valuetext={entry?.label}
+            onKeyDown={onKeyDown}
           />
-        ))}
-        <button
-          className="playhead"
-          style={{ left: `${pct}%` }}
-          role="slider"
-          aria-label="Timeline position"
-          aria-valuemin={0}
-          aria-valuemax={Math.max(0, n - 1)}
-          aria-valuenow={clamped}
-          aria-valuetext={entry?.label}
-          onPointerDown={(ev) => {
-            ev.stopPropagation();
-            ev.preventDefault();
-            setDragging(true);
-          }}
-          onKeyDown={onKeyDown}
-        />
+        </div>
       </div>
       <div className="readout">
-        <span className="evt">
-          {entry ? entry.label : 'No events'}
-          {entry?.slot_index != null && <span className="faint"> · subpart {entry.slot_index}</span>}
-          {entry?.username && <span className="faint"> · {entry.username}</span>}
+        <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+          <span className="steps">
+            <button
+              className="step-btn"
+              onClick={() => step(-1)}
+              disabled={clamped <= 0}
+              title="Step back (←)"
+              aria-label="Step back"
+            >
+              ‹
+            </button>
+            <button
+              className="step-btn"
+              onClick={() => step(1)}
+              disabled={clamped >= n - 1}
+              title="Step forward (→)"
+              aria-label="Step forward"
+            >
+              ›
+            </button>
+          </span>
+          <span className="evt">
+            {entry ? entry.label : 'No events'}
+            {entry?.slot_index != null && <span className="faint"> · subpart {entry.slot_index}</span>}
+            {entry?.username && <span className="faint"> · {entry.username}</span>}
+          </span>
         </span>
         <div className="filters">
           {(Object.keys(KIND_LABEL) as TimelineKind[]).map((kind) => (
             <label key={kind}>
-              <input
-                type="checkbox"
-                checked={!hidden.has(kind)}
-                onChange={() => onToggleKind(kind)}
-              />
+              <input type="checkbox" checked={!hidden.has(kind)} onChange={() => onToggleKind(kind)} />
               <i
                 className={`legend-swatch${kind === 'milestone' ? ' sq' : ''}`}
                 style={{ background: `var(--mark-${kind})` }}

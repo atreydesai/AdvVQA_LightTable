@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { MouseEvent as ReactMouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import TimelineScrubber from '../components/TimelineScrubber';
 import VerdictBadge from '../components/VerdictBadge';
@@ -20,7 +20,10 @@ export default function QuestionViewPage() {
   const [hidden, setHidden] = useState<Set<TimelineKind>>(new Set());
   const [index, setIndex] = useState<number | null>(null); // null = latest
   const [scrubbing, setScrubbing] = useState(false);
-  const [activeSlot, setActiveSlot] = useState<number | null>(null);
+  const [activeSlot, setActiveSlot] = useState<number | null>(() => {
+    const raw = params.get('slot');
+    return raw !== null && raw !== '' && !Number.isNaN(Number(raw)) ? Number(raw) : null;
+  });
 
   useEffect(() => {
     let alive = true;
@@ -193,9 +196,13 @@ export default function QuestionViewPage() {
             session={session}
             slotStates={slotStates}
             scrubbing={scrubbing}
-            setActiveSlot={(i) => {
+            openSlot={(i, ev) => {
+              if (ev && (ev.metaKey || ev.ctrlKey)) {
+                window.open(`/q/${session.session_id}?view=regular&slot=${i}`, '_blank');
+                return;
+              }
               setActiveSlot(i);
-              setParams({ view: 'regular' }, { replace: true });
+              setParams({ view: 'regular', slot: String(i) }, { replace: true });
             }}
           />
         )}
@@ -314,9 +321,9 @@ function BroadView(props: {
   session: SessionHistory['session'];
   slotStates: Map<number, SlotVisualState>;
   scrubbing: boolean;
-  setActiveSlot: (i: number) => void;
+  openSlot: (i: number, ev?: ReactMouseEvent) => void;
 }) {
-  const { slots, session, slotStates, scrubbing, setActiveSlot } = props;
+  const { slots, session, slotStates, scrubbing, openSlot } = props;
   const cols = Math.min(Math.max(slots.length, 2), 5);
 
   return (
@@ -331,7 +338,13 @@ function BroadView(props: {
               ? 'ok'
               : 'bad';
         return (
-          <div key={slot.slot_index} className="panel" style={{ overflow: 'hidden' }}>
+          <div
+            key={slot.slot_index}
+            className="panel"
+            style={{ overflow: 'hidden', cursor: 'pointer' }}
+            onClick={(ev) => openSlot(slot.slot_index, ev)}
+            title="Open in regular view (⌘-click for new tab)"
+          >
             <div
               style={{
                 display: 'flex',
@@ -341,14 +354,10 @@ function BroadView(props: {
                 borderBottom: '1px solid var(--hairline)',
               }}
             >
-              <button
-                onClick={() => setActiveSlot(slot.slot_index)}
-                style={{ border: 'none', background: 'none', fontWeight: 600, fontSize: 13, padding: 0 }}
-                title="Open in regular view"
-              >
+              <span style={{ fontWeight: 600, fontSize: 13 }}>
                 <i className={`dot ${dotClass}`} style={{ marginRight: 6 }} />
                 {slotLabel(slot, session.slots, session.question_type)}
-              </button>
+              </span>
               <span className={`rev-chip${st?.justChanged ? ' changed' : ''}`}>
                 {st && st.totalRevisions > 0 ? `rev ${st.revision}/${st.totalRevisions}` : '—'}
               </span>
