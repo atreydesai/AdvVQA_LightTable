@@ -1,0 +1,550 @@
+<title>Light Table</title>
+<style>
+  :root {
+    /* Grounds */
+    --paper: #FAFAFB;        /* app background */
+    --panel: #FFFFFF;        /* cards, toolbars */
+    --mat: #F1F1F4;          /* neutral mat behind images */
+    --hairline: #E3E3E8;     /* 1px separators */
+    --hairline-strong: #D1D1D6;
+
+    /* Ink */
+    --ink: #1D1D1F;
+    --ink-2: #6E6E76;
+    --ink-3: #A5A5AC;
+
+    /* Accent */
+    --accent: #0066CC;
+    --accent-quiet: #EAF2FC;
+
+    /* Semantic — separate from accent */
+    --ok: #1E8A44;      --ok-quiet: #E7F4EB;
+    --bad: #C93B32;     --bad-quiet: #FBEBEA;
+    --warn: #B27300;    --warn-quiet: #FBF3E0;
+
+    /* Diff (git-style, tuned for light) */
+    --diff-add-bg: #E4F3E8;  --diff-add-ink: #14632F;  --diff-add-strong: #BBE3C6;
+    --diff-del-bg: #FBE9E7;  --diff-del-ink: #96261F;  --diff-del-strong: #F3C6C1;
+
+    /* Timeline mark hues */
+    --mark-image: #0066CC;   /* image revision */
+    --mark-text: #7B4FBF;    /* text/clue change */
+    --mark-vlm: #B27300;     /* model run */
+    --mark-milestone: #1D1D1F; /* created / submitted / finalized */
+
+    --radius: 8px;
+    --radius-lg: 12px;
+    --font-ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, Helvetica, Arial, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; }
+  html { -webkit-font-smoothing: antialiased; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-ui);
+    font-size: 15px;
+    line-height: 1.55;
+  }
+
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 64px 48px 120px; }
+
+  /* ---------- page header ---------- */
+  .kicker {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--accent);
+  }
+  h1 { font-size: 40px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; margin: 8px 0 12px; text-wrap: balance; }
+  .lede { font-size: 17px; color: var(--ink-2); max-width: 62ch; }
+  .meta-row { display: flex; gap: 16px; align-items: center; margin-top: 20px; font-size: 13px; color: var(--ink-3); }
+  .badge {
+    display: inline-block; padding: 2px 10px; border-radius: 99px;
+    background: var(--warn-quiet); color: var(--warn);
+    font-size: 12px; font-weight: 600;
+  }
+
+  /* ---------- sections ---------- */
+  section { margin-top: 72px; }
+  .sec-head { display: flex; align-items: baseline; gap: 14px; border-bottom: 1px solid var(--hairline); padding-bottom: 10px; margin-bottom: 24px; }
+  h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
+  .sec-note { font-size: 13px; color: var(--ink-3); }
+  h3 { font-size: 15px; font-weight: 600; margin: 28px 0 10px; }
+  p.body { max-width: 68ch; color: var(--ink-2); }
+  p.body + p.body { margin-top: 10px; }
+  p.body strong { color: var(--ink); font-weight: 600; }
+
+  /* ---------- principles ---------- */
+  .principles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--hairline); border: 1px solid var(--hairline); border-radius: var(--radius-lg); overflow: hidden; }
+  .principle { background: var(--panel); padding: 20px 22px; }
+  .principle b { display: block; font-size: 15px; margin-bottom: 6px; }
+  .principle span { font-size: 13.5px; color: var(--ink-2); }
+
+  /* ---------- swatches ---------- */
+  .swatch-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .swatch { border: 1px solid var(--hairline); border-radius: var(--radius); overflow: hidden; background: var(--panel); }
+  .swatch .chip { height: 56px; border-bottom: 1px solid var(--hairline); }
+  .swatch .info { padding: 10px 12px; }
+  .swatch .info b { display: block; font-size: 13px; font-weight: 600; }
+  .swatch .info code { font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-3); }
+  .swatch .info span { display: block; font-size: 12px; color: var(--ink-2); margin-top: 2px; }
+
+  /* ---------- type specimens ---------- */
+  .spec { display: grid; grid-template-columns: 220px 1fr; gap: 24px; padding: 16px 0; border-bottom: 1px solid var(--hairline); align-items: baseline; }
+  .spec:last-child { border-bottom: none; }
+  .spec .label { font-size: 12px; color: var(--ink-3); font-family: var(--font-mono); }
+  .t-title { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
+  .t-h2s   { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }
+  .t-body  { font-size: 15px; }
+  .t-sub   { font-size: 13px; color: var(--ink-2); }
+  .t-label { font-size: 11px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--ink-2); }
+  .t-mono  { font-family: var(--font-mono); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+
+  /* ---------- component demos ---------- */
+  .demo {
+    border: 1px solid var(--hairline); border-radius: var(--radius-lg);
+    background: var(--panel); padding: 28px; margin-top: 12px;
+  }
+  .demo-cap { font-size: 12.5px; color: var(--ink-3); margin-top: 10px; }
+
+  /* subpart tabs */
+  .tabs { display: inline-flex; background: var(--mat); border-radius: 9px; padding: 3px; gap: 2px; }
+  .tab {
+    border: none; background: transparent; font: inherit; cursor: pointer;
+    padding: 5px 18px; border-radius: 7px; font-size: 13px; font-weight: 500; color: var(--ink-2);
+    display: flex; align-items: center; gap: 7px;
+  }
+  .tab[aria-selected="true"] { background: var(--panel); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,0.10), 0 0 0 0.5px rgba(0,0,0,0.04); font-weight: 600; }
+  .tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .dot { width: 7px; height: 7px; border-radius: 99px; }
+  .dot.ok { background: var(--ok); } .dot.bad { background: var(--bad); } .dot.na { background: var(--ink-3); }
+
+  /* verdict badges */
+  .verdicts { display: flex; gap: 10px; flex-wrap: wrap; }
+  .verdict { display: inline-flex; align-items: center; gap: 6px; padding: 3px 12px; border-radius: 99px; font-size: 12.5px; font-weight: 600; }
+  .v-ok  { background: var(--ok-quiet); color: var(--ok); }
+  .v-bad { background: var(--bad-quiet); color: var(--bad); }
+  .v-abstain { background: var(--warn-quiet); color: var(--warn); }
+  .v-none { background: var(--mat); color: var(--ink-2); }
+
+  /* image frame */
+  .frames { display: flex; gap: 20px; align-items: flex-start; }
+  .frame {
+    background: var(--mat); border: 1px solid var(--hairline); border-radius: var(--radius);
+    padding: 10px; display: inline-block;
+  }
+  .frame .ph { border-radius: 4px; display: block; }
+
+  /* diff viewer */
+  .diff { font-family: var(--font-mono); font-size: 12.5px; line-height: 1.7; border: 1px solid var(--hairline); border-radius: var(--radius); overflow: hidden; }
+  .diff-head { display: flex; justify-content: space-between; padding: 8px 14px; background: var(--paper); border-bottom: 1px solid var(--hairline); font-family: var(--font-ui); font-size: 12px; color: var(--ink-2); font-weight: 500; }
+  .dline { padding: 1px 14px; white-space: pre-wrap; }
+  .dline.add { background: var(--diff-add-bg); color: var(--diff-add-ink); }
+  .dline.del { background: var(--diff-del-bg); color: var(--diff-del-ink); }
+  .dline mark { border-radius: 2px; padding: 0 1px; }
+  .dline.add mark { background: var(--diff-add-strong); color: inherit; }
+  .dline.del mark { background: var(--diff-del-strong); color: inherit; text-decoration: line-through; }
+
+  /* ---------- timeline scrubber ---------- */
+  .scrub-demo { user-select: none; }
+  .slot-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 26px; }
+  .slot-card { border: 1px solid var(--hairline); border-radius: var(--radius); overflow: hidden; background: var(--panel); }
+  .slot-card .sc-head { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--hairline); }
+  .slot-card .sc-head b { font-size: 13px; font-weight: 600; }
+  .rev-chip { font-family: var(--font-mono); font-size: 11px; color: var(--ink-2); background: var(--mat); padding: 1px 8px; border-radius: 99px; font-variant-numeric: tabular-nums; }
+  .rev-chip.changed { background: var(--accent-quiet); color: var(--accent); font-weight: 600; }
+  .sc-img { background: var(--mat); padding: 10px; }
+  .stage { position: relative; height: 110px; background: linear-gradient(135deg, #C7D4E2, #97A9BE); border-radius: 4px; overflow: hidden; }
+  .subject { position: absolute; background: #4A5D74; border-radius: 3px; transition: all 220ms cubic-bezier(0.25,0.1,0.25,1); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.25); }
+  .scrubbing .subject { transition: none; }
+
+  .timeline { position: relative; padding: 26px 0 34px; }
+  .track { position: relative; height: 4px; border-radius: 2px; background: var(--hairline-strong); }
+  .track-fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); border-radius: 2px; }
+  .marks { position: absolute; inset: 0; }
+  .tmark { position: absolute; top: 50%; width: 9px; height: 9px; border-radius: 99px; transform: translate(-50%, -50%); border: 2px solid var(--panel); cursor: pointer; }
+  .tmark.past { box-shadow: 0 0 0 1px rgba(0,0,0,0.06); }
+  .tmark.m-image { background: var(--mark-image); }
+  .tmark.m-text { background: var(--mark-text); }
+  .tmark.m-vlm { background: var(--mark-vlm); }
+  .tmark.m-milestone { background: var(--mark-milestone); width: 11px; height: 11px; border-radius: 3px; }
+  .playhead {
+    position: absolute; top: 50%; transform: translate(-50%, -50%);
+    width: 18px; height: 18px; border-radius: 99px; background: var(--panel);
+    border: 1.5px solid var(--hairline-strong);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.18); cursor: grab; z-index: 2;
+  }
+  .playhead:active { cursor: grabbing; }
+  .playhead::after { content: ""; position: absolute; inset: 5px; border-radius: 99px; background: var(--accent); }
+  .scrub-readout { display: flex; justify-content: space-between; margin-top: 14px; align-items: baseline; }
+  .scrub-time { font-family: var(--font-mono); font-size: 12.5px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  .scrub-event { font-size: 13px; font-weight: 500; }
+  .legend { display: flex; gap: 18px; margin-top: 18px; font-size: 12px; color: var(--ink-2); flex-wrap: wrap; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .lg { width: 8px; height: 8px; border-radius: 99px; display: inline-block; }
+  .lg.sq { border-radius: 2px; width: 9px; height: 9px; }
+
+  /* layout diagrams */
+  .lay { display: grid; gap: 14px; grid-template-columns: 1fr 1fr; }
+  .lay-fig { border: 1px solid var(--hairline); border-radius: var(--radius); background: var(--paper); padding: 14px; }
+  .lay-fig .fig-title { font-size: 12px; font-weight: 600; margin-bottom: 10px; }
+  .wire { border: 1px solid var(--hairline-strong); border-radius: 6px; background: var(--panel); overflow: hidden; font-size: 10px; color: var(--ink-3); }
+  .wire .bar { padding: 5px 10px; border-bottom: 1px solid var(--hairline); background: var(--paper); }
+  .wire .cell { display: grid; place-items: center; border: 1px dashed var(--hairline-strong); border-radius: 4px; background: var(--mat); color: var(--ink-3); }
+
+  table.toktable { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  table.toktable th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-3); font-weight: 600; padding: 8px 12px; border-bottom: 1px solid var(--hairline); }
+  table.toktable td { padding: 9px 12px; border-bottom: 1px solid var(--hairline); vertical-align: top; }
+  table.toktable td:first-child { font-weight: 600; white-space: nowrap; }
+  table.toktable code { font-family: var(--font-mono); font-size: 12px; background: var(--mat); padding: 1px 6px; border-radius: 4px; }
+
+  .qlist { counter-reset: q; max-width: 70ch; }
+  .q { display: grid; grid-template-columns: 34px 1fr; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--hairline); }
+  .q::before { counter-increment: q; content: counter(q); font-family: var(--font-mono); font-size: 13px; color: var(--accent); font-weight: 600; padding-top: 1px; }
+  .q b { display: block; margin-bottom: 3px; font-size: 14.5px; }
+  .q span { font-size: 13.5px; color: var(--ink-2); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .subject { transition: none !important; }
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="kicker">AdvVQA · Versioning Viewer · Design Language</div>
+    <h1>Light Table</h1>
+    <p class="lede">A photographer's light table is where you lay out every frame of a shoot and study how the picture changed from take to take. This interface does the same for questions: their images, their clues, and the model's verdicts — over time.</p>
+    <div class="meta-row">
+      <span class="badge">Draft v0.1 — for review</span>
+      <span>Desktop only (≥ 1280 px) · Light theme, committed</span>
+    </div>
+  </header>
+
+  <!-- ============ PRINCIPLES ============ -->
+  <section>
+    <div class="sec-head"><h2>Principles</h2><span class="sec-note">Apple HIG, applied to a review tool</span></div>
+    <div class="principles">
+      <div class="principle"><b>Content first, chrome recedes</b><span>The question's images are the interface. Chrome is white, hairline-separated, and never competes with the photograph being judged. No gradients, no shadows heavier than 1&nbsp;px of ambiguity.</span></div>
+      <div class="principle"><b>Time is the primary axis</b><span>One scrubber governs the whole question. Every subpart, verdict, and caption answers the same question: "what did this look like at moment&nbsp;t?" Nothing on screen may disagree with the playhead.</span></div>
+      <div class="principle"><b>Images read true</b><span>Photos sit on a neutral gray mat (<code style="font-family:var(--font-mono);font-size:11px">#F1F1F4</code>), never on pure white or a tinted surface, so edits to brightness, crop, and position are judged accurately.</span></div>
+      <div class="principle"><b>Desktop density</b><span>No responsive collapse. Panels use fixed, generous proportions tuned for 1280–1920&nbsp;px. Keyboard is first-class: ←/→ steps revisions, ⇧←/→ jumps milestones, 1–9 selects subparts.</span></div>
+      <div class="principle"><b>Semantic color is not decoration</b><span>Green means the model answered correctly. Red means it didn't. Amber means abstain/draft. These hues appear nowhere else, so a glance at any screen is a truthful summary.</span></div>
+      <div class="principle"><b>Scrubbing feels physical</b><span>Dragging the playhead swaps images instantly (like scrubbing film); discrete jumps (clicking a mark, arrow keys) get a 220&nbsp;ms crossfade. Revisions are prefetched so the slider never stutters.</span></div>
+    </div>
+  </section>
+
+  <!-- ============ COLOR ============ -->
+  <section>
+    <div class="sec-head"><h2>Color</h2><span class="sec-note">one accent, quiet neutrals, honest semantics</span></div>
+
+    <h3>Grounds &amp; ink</h3>
+    <div class="swatch-grid">
+      <div class="swatch"><div class="chip" style="background:#FAFAFB"></div><div class="info"><b>Paper</b> <code>#FAFAFB</code><span>App background</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#FFFFFF"></div><div class="info"><b>Panel</b> <code>#FFFFFF</code><span>Cards, toolbars, popovers</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#F1F1F4"></div><div class="info"><b>Mat</b> <code>#F1F1F4</code><span>Behind every image</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#E3E3E8"></div><div class="info"><b>Hairline</b> <code>#E3E3E8</code><span>1 px separators only</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#1D1D1F"></div><div class="info"><b>Ink</b> <code>#1D1D1F</code><span>Primary text</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#6E6E76"></div><div class="info"><b>Ink 2</b> <code>#6E6E76</code><span>Secondary text, captions</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#0066CC"></div><div class="info"><b>Accent</b> <code>#0066CC</code><span>Playhead, links, selection, focus</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#EAF2FC"></div><div class="info"><b>Accent quiet</b> <code>#EAF2FC</code><span>Selected rows, changed-chips</span></div></div>
+    </div>
+
+    <h3>Semantic (model verdicts, diffs, states)</h3>
+    <div class="swatch-grid">
+      <div class="swatch"><div class="chip" style="background:linear-gradient(to right,#1E8A44 50%,#E7F4EB 50%)"></div><div class="info"><b>Correct</b> <code>#1E8A44 / #E7F4EB</code><span>VLM answered right</span></div></div>
+      <div class="swatch"><div class="chip" style="background:linear-gradient(to right,#C93B32 50%,#FBEBEA 50%)"></div><div class="info"><b>Incorrect</b> <code>#C93B32 / #FBEBEA</code><span>VLM answered wrong</span></div></div>
+      <div class="swatch"><div class="chip" style="background:linear-gradient(to right,#B27300 50%,#FBF3E0 50%)"></div><div class="info"><b>Abstain / draft</b> <code>#B27300 / #FBF3E0</code><span>No verdict, pending states</span></div></div>
+      <div class="swatch"><div class="chip" style="background:linear-gradient(to right,#E4F3E8 50%,#FBE9E7 50%)"></div><div class="info"><b>Diff add / del</b> <code>#E4F3E8 / #FBE9E7</code><span>Text diff backgrounds</span></div></div>
+    </div>
+
+    <h3>Timeline mark hues</h3>
+    <p class="body">Each mark on the scrubber is colored by <strong>what kind of change</strong> it records, so the shape of a question's history is legible before you scrub at all — a cluster of blue means heavy image rework; purple means the writing changed.</p>
+    <div class="legend" style="margin-top:12px">
+      <span><i class="lg" style="background:#0066CC"></i> Image revision</span>
+      <span><i class="lg" style="background:#7B4FBF"></i> Text / clue change</span>
+      <span><i class="lg" style="background:#B27300"></i> Model run</span>
+      <span><i class="lg sq" style="background:#1D1D1F"></i> Milestone (created · submitted · finalized)</span>
+    </div>
+  </section>
+
+  <!-- ============ TYPE ============ -->
+  <section>
+    <div class="sec-head"><h2>Typography</h2><span class="sec-note">native SF, no webfonts</span></div>
+    <p class="body">The tool is desktop-only and its reviewers are on Macs, so the honest HIG choice is the <strong>native San Francisco system stack</strong> — true SF Pro on macOS, no font download, no fallback drift. Timestamps, revision numbers, and diff text use <strong>SF Mono</strong> (<code style="font-family:var(--font-mono);font-size:12px">ui-monospace</code>) with tabular numerals so columns of times align.</p>
+
+    <div style="margin-top:20px">
+      <div class="spec"><span class="label">Title · 28/700 · -0.02em</span><span class="t-title">What author is shown in this 1889 self-portrait?</span></div>
+      <div class="spec"><span class="label">Section · 20/600</span><span class="t-h2s">Subpart 3 — Easy</span></div>
+      <div class="spec"><span class="label">Body · 15/400 · lh 1.55</span><span class="t-body">This clue was rewritten twice before submission; the final wording removes the artist's nationality to prevent an early buzz.</span></div>
+      <div class="spec"><span class="label">Caption · 13/400 · ink-2</span><span class="t-sub">Uploaded by hjhan · revision 4 of 7</span></div>
+      <div class="spec"><span class="label">Label · 11/600 · caps 0.07em</span><span class="t-label">Image revision</span></div>
+      <div class="spec"><span class="label">Mono · 12.5 · tabular</span><span class="t-mono">2026-03-14 09:41:22 · rev 4/7 · 812 ms</span></div>
+    </div>
+  </section>
+
+  <!-- ============ SPACING & LAYOUT ============ -->
+  <section>
+    <div class="sec-head"><h2>Spacing &amp; layout</h2><span class="sec-note">8-pt grid, two views, one shell</span></div>
+    <table class="toktable">
+      <tr><th>Token</th><th>Value</th><th>Use</th></tr>
+      <tr><td>Grid unit</td><td><code>8 px</code></td><td>All padding/gaps are multiples; 4 px permitted inside dense chips only</td></tr>
+      <tr><td>Page width</td><td><code>min 1280 · max 1680</code></td><td>Centered; no breakpoints below 1280</td></tr>
+      <tr><td>Corner radius</td><td><code>8 px</code> cards · <code>12 px</code> panels · <code>99 px</code> pills</td><td>Never mixed within one component family</td></tr>
+      <tr><td>Elevation</td><td>hairline first</td><td>Shadows only on the playhead, popovers, and drag states — <code>0 1px 4px rgba(0,0,0,.18)</code> max</td></tr>
+      <tr><td>Image mat</td><td><code>10 px</code> mat padding</td><td>Every image sits in a Mat-colored frame with a hairline border</td></tr>
+    </table>
+
+    <h3>The two views share one shell</h3>
+    <div class="lay">
+      <div class="lay-fig">
+        <div class="fig-title">Regular view — one subpart large</div>
+        <div class="wire">
+          <div class="bar">◂ Questions &nbsp;·&nbsp; Q-0142 · tossup · finalized &nbsp;·&nbsp; [Regular | Broad]</div>
+          <div class="bar" style="text-align:center">[ Hard · Mid · Easy ] subpart tabs</div>
+          <div style="display:grid;grid-template-columns:3fr 2fr;gap:8px;padding:10px">
+            <div class="cell" style="height:120px">image @ t (on mat)</div>
+            <div style="display:grid;gap:8px">
+              <div class="cell" style="height:56px">clue text @ t</div>
+              <div class="cell" style="height:56px">first ⇄ final diff</div>
+            </div>
+          </div>
+          <div class="bar" style="border-top:1px solid var(--hairline);border-bottom:none">●───●──●────◉───────● timeline scrubber</div>
+        </div>
+      </div>
+      <div class="lay-fig">
+        <div class="fig-title">Broad view — all subparts at once</div>
+        <div class="wire">
+          <div class="bar">◂ Questions &nbsp;·&nbsp; Q-0142 · tossup · finalized &nbsp;·&nbsp; [Regular | Broad]</div>
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:10px">
+            <div class="cell" style="height:88px">S1 @ t</div>
+            <div class="cell" style="height:88px">S2 @ t</div>
+            <div class="cell" style="height:88px">S3 @ t</div>
+            <div class="cell" style="height:88px">S4 @ t</div>
+            <div class="cell" style="height:88px">S5 @ t</div>
+          </div>
+          <div class="bar" style="border-top:1px solid var(--hairline);border-bottom:none">●───●──●────◉───────● same scrubber, same t</div>
+        </div>
+      </div>
+    </div>
+    <p class="demo-cap">Switching Regular ⇄ Broad preserves the playhead position and selected subpart. The scrubber is pinned to the bottom of the viewport in both views.</p>
+  </section>
+
+  <!-- ============ TIMELINE SCRUBBER (live demo) ============ -->
+  <section>
+    <div class="sec-head"><h2>The timeline scrubber</h2><span class="sec-note">live demo — drag the playhead</span></div>
+    <p class="body">The signature component. One track for the whole question; marks are actual recorded events (image uploads, clue edits, model runs, milestones) positioned <strong>in event order, evenly spaced</strong> — not proportional to wall-clock time, since authoring sessions have hour-long gaps that would crush the interesting parts together. Drag through it: all three subparts below re-render to their state at that moment, which is how you review the effect of repositioning across every part at once.</p>
+
+    <div class="demo scrub-demo" id="scrubDemo">
+      <div class="slot-row" id="slotRow"></div>
+      <div class="timeline">
+        <div class="track" id="track">
+          <div class="track-fill" id="fill"></div>
+          <div class="marks" id="marks"></div>
+          <div class="playhead" id="playhead" tabindex="0" role="slider" aria-label="Timeline position" aria-valuemin="0" aria-valuemax="9" aria-valuenow="9"></div>
+        </div>
+        <div class="scrub-readout">
+          <span class="scrub-event" id="evtLabel"></span>
+          <span class="scrub-time" id="evtTime"></span>
+        </div>
+      </div>
+      <div class="legend">
+        <span><i class="lg" style="background:#0066CC"></i> Image revision</span>
+        <span><i class="lg" style="background:#7B4FBF"></i> Clue change</span>
+        <span><i class="lg" style="background:#B27300"></i> Model run</span>
+        <span><i class="lg sq" style="background:#1D1D1F"></i> Milestone</span>
+      </div>
+    </div>
+    <p class="demo-cap">Placeholder graphics stand in for slot images: watch the dark subject move and the crop tighten as revisions land. The "rev n/m" chip flips to accent-blue on the subpart that changed at the current mark. Arrow keys work when the playhead is focused.</p>
+  </section>
+
+  <!-- ============ COMPONENTS ============ -->
+  <section>
+    <div class="sec-head"><h2>Components</h2><span class="sec-note">the recurring vocabulary</span></div>
+
+    <h3>Subpart tabs</h3>
+    <div class="demo">
+      <div class="tabs" role="tablist">
+        <button class="tab" role="tab" aria-selected="false"><i class="dot bad"></i>Hard</button>
+        <button class="tab" role="tab" aria-selected="true"><i class="dot bad"></i>Mid</button>
+        <button class="tab" role="tab" aria-selected="false"><i class="dot ok"></i>Easy</button>
+      </div>
+      <p class="demo-cap">Segmented control per HIG. The dot is the VLM verdict <em>at the current playhead position</em> — it updates as you scrub. Bonus questions group tabs by sub-question.</p>
+    </div>
+
+    <h3>Verdict badges</h3>
+    <div class="demo">
+      <div class="verdicts">
+        <span class="verdict v-ok">✓ Correct · gpt-5.2</span>
+        <span class="verdict v-bad">✕ Incorrect · qwen3-vl</span>
+        <span class="verdict v-abstain">— Abstained</span>
+        <span class="verdict v-none">Not yet tested</span>
+      </div>
+      <p class="demo-cap">Always paired with the model name. Quiet backgrounds; the hue itself carries the meaning.</p>
+    </div>
+
+    <h3>Image mat</h3>
+    <div class="demo">
+      <div class="frames">
+        <span class="frame"><span class="ph" style="width:200px;height:130px;background:linear-gradient(135deg,#C7D4E2,#97A9BE)"></span></span>
+        <span class="frame"><span class="ph" style="width:130px;height:130px;background:linear-gradient(135deg,#E2D6C7,#BEA997)"></span></span>
+      </div>
+      <p class="demo-cap">Every image on a 10 px mat with a hairline. Aspect ratio is preserved; the mat absorbs the variance so grids stay aligned.</p>
+    </div>
+
+    <h3>Text diff — first authored vs. final submitted</h3>
+    <div class="demo">
+      <div class="diff">
+        <div class="diff-head"><span>Clue · Subpart 2 (Mid)</span><span>first authored → final submitted</span></div>
+        <div class="dline del">- This painting by a <mark>Dutch Post-Impressionist</mark> shows the artist with a <mark>bandaged ear and</mark> a fur cap.</div>
+        <div class="dline add">+ This painting shows the artist with a fur cap<mark>, an easel visible behind him</mark>.</div>
+        <div class="dline">  For 10 points, name this self-portraitist.</div>
+      </div>
+      <p class="demo-cap">Word-level highlights inside line-level add/remove rows — git style, SF Mono. A "no changes" state renders the text once on the mat with a quiet "unchanged" chip.</p>
+    </div>
+  </section>
+
+  <!-- ============ MOTION ============ -->
+  <section>
+    <div class="sec-head"><h2>Motion</h2><span class="sec-note">two durations, one easing</span></div>
+    <table class="toktable">
+      <tr><th>Context</th><th>Spec</th><th>Rationale</th></tr>
+      <tr><td>Scrub (dragging)</td><td><code>0 ms</code> — instant swap</td><td>Scrubbing is a physical gesture; latency reads as breakage</td></tr>
+      <tr><td>Discrete jump</td><td><code>220 ms</code> crossfade · <code>cubic-bezier(0.25,0.1,0.25,1)</code></td><td>Clicking a mark or arrow-keying deserves confirmation that something changed</td></tr>
+      <tr><td>Chrome (tabs, popovers)</td><td><code>150 ms</code> ease-out</td><td>HIG standard; chrome never animates slower than content</td></tr>
+      <tr><td>Reduced motion</td><td>all transitions → instant</td><td><code>prefers-reduced-motion</code> honored globally</td></tr>
+    </table>
+  </section>
+
+  <!-- ============ OPEN QUESTIONS ============ -->
+  <section>
+    <div class="sec-head"><h2>Open design questions</h2><span class="sec-note">answer any or all — defaults noted</span></div>
+    <div class="qlist">
+      <div class="q"><div><b>Mark spacing: event-order (default) or true time-proportional?</b><span>Event-order spacing keeps marks readable; a toggle for proportional could be added later if the real rhythm of a session matters to you.</span></div></div>
+      <div class="q"><div><b>Should the broad view include the clue text under each image?</b><span>Default: image-only cards with a one-line clue on hover, to keep 5+ subparts comfortably on screen at 1440 px.</span></div></div>
+      <div class="q"><div><b>Model-run marks on the timeline: on by default, or a filter toggle?</b><span>Sessions with heavy testing can log dozens of runs. Default: shown, with a mark-type filter in the toolbar.</span></div></div>
+      <div class="q"><div><b>Question browser: reuse the review queue's card list, or a denser table?</b><span>Default: dense sortable table (ID, type, author, status, #revisions, last activity) — this is a lookup tool, not a triage queue.</span></div></div>
+    </div>
+  </section>
+</div>
+
+<script>
+(function () {
+  // ---- demo data: 10 events across 3 slots ----
+  // each event: type, label, time, and optional slot state change
+  var EVENTS = [
+    { type: 'milestone', label: 'Session created', time: '09:02:11' },
+    { type: 'image', label: 'Hard — image uploaded', time: '09:05:48', slot: 0, state: { x: 8, y: 8, w: 84, h: 84 } },
+    { type: 'image', label: 'Mid — image uploaded', time: '09:09:02', slot: 1, state: { x: 30, y: 20, w: 60, h: 60 } },
+    { type: 'image', label: 'Easy — image uploaded', time: '09:12:37', slot: 2, state: { x: 55, y: 30, w: 40, h: 40 } },
+    { type: 'text', label: 'Mid — clue rewritten', time: '09:21:14' },
+    { type: 'image', label: 'Hard — crop tightened', time: '09:26:50', slot: 0, state: { x: 4, y: 22, w: 44, h: 62 } },
+    { type: 'vlm', label: 'Run all — buzz at Mid', time: '09:31:05' },
+    { type: 'image', label: 'Mid — subject recentered', time: '09:38:19', slot: 1, state: { x: 42, y: 12, w: 34, h: 76 } },
+    { type: 'image', label: 'Easy — reveal enlarged', time: '09:44:56', slot: 2, state: { x: 20, y: 10, w: 68, h: 80 } },
+    { type: 'milestone', label: 'Submitted', time: '09:51:33' }
+  ];
+  var SLOTS = [
+    { name: 'Hard', hue: 'linear-gradient(135deg,#C7D4E2,#97A9BE)' },
+    { name: 'Mid', hue: 'linear-gradient(135deg,#D9CFC2,#B3A18C)' },
+    { name: 'Easy', hue: 'linear-gradient(135deg,#C9D8CC,#96AF9C)' }
+  ];
+
+  var slotRow = document.getElementById('slotRow');
+  var marksEl = document.getElementById('marks');
+  var track = document.getElementById('track');
+  var fill = document.getElementById('fill');
+  var playhead = document.getElementById('playhead');
+  var evtLabel = document.getElementById('evtLabel');
+  var evtTime = document.getElementById('evtTime');
+  var demo = document.getElementById('scrubDemo');
+
+  // build slot cards
+  var cards = SLOTS.map(function (s, i) {
+    var card = document.createElement('div');
+    card.className = 'slot-card';
+    card.innerHTML =
+      '<div class="sc-head"><b>' + s.name + '</b><span class="rev-chip" data-chip></span></div>' +
+      '<div class="sc-img"><div class="stage" style="background:' + s.hue + '"><div class="subject" data-subj></div></div></div>';
+    slotRow.appendChild(card);
+    return { chip: card.querySelector('[data-chip]'), subj: card.querySelector('[data-subj]') };
+  });
+
+  // build marks (evenly spaced by event order)
+  var n = EVENTS.length;
+  var markEls = EVENTS.map(function (e, i) {
+    var m = document.createElement('button');
+    m.className = 'tmark m-' + e.type;
+    m.style.left = (i / (n - 1)) * 100 + '%';
+    m.style.border = '2px solid var(--panel)';
+    m.style.padding = 0;
+    m.setAttribute('aria-label', e.label);
+    m.addEventListener('click', function () { setPos(i, false); });
+    marksEl.appendChild(m);
+    return m;
+  });
+
+  var pos = n - 1;
+  function stateAt(idx) {
+    var st = [null, null, null], changed = [false, false, false];
+    for (var i = 0; i <= idx; i++) {
+      var e = EVENTS[i];
+      if (e.slot !== undefined) { st[e.slot] = e.state; changed[e.slot] = (i === idx); }
+    }
+    var revs = [0, 0, 0], tot = [0, 0, 0];
+    EVENTS.forEach(function (e, i) {
+      if (e.slot !== undefined) { tot[e.slot]++; if (i <= idx) revs[e.slot]++; }
+    });
+    return { st: st, changed: changed, revs: revs, tot: tot };
+  }
+
+  function setPos(idx, scrubbing) {
+    pos = Math.max(0, Math.min(n - 1, idx));
+    demo.classList.toggle('scrubbing', !!scrubbing);
+    var pct = (pos / (n - 1)) * 100;
+    playhead.style.left = pct + '%';
+    fill.style.width = pct + '%';
+    playhead.setAttribute('aria-valuenow', pos);
+    var e = EVENTS[pos];
+    evtLabel.textContent = e.label;
+    evtTime.textContent = '2026-03-14 ' + e.time + ' · event ' + (pos + 1) + '/' + n;
+    markEls.forEach(function (m, i) { m.classList.toggle('past', i <= pos); });
+    var s = stateAt(pos);
+    cards.forEach(function (c, i) {
+      var st = s.st[i];
+      if (st) {
+        c.subj.style.display = 'block';
+        c.subj.style.left = st.x + '%'; c.subj.style.top = st.y + '%';
+        c.subj.style.width = st.w + '%'; c.subj.style.height = st.h + '%';
+        c.chip.textContent = 'rev ' + s.revs[i] + '/' + s.tot[i];
+      } else {
+        c.subj.style.display = 'none';
+        c.chip.textContent = 'no image';
+      }
+      c.chip.className = 'rev-chip' + (s.changed[i] ? ' changed' : '');
+    });
+  }
+
+  // dragging
+  var dragging = false;
+  function posFromClient(x) {
+    var r = track.getBoundingClientRect();
+    return Math.round(((x - r.left) / r.width) * (n - 1));
+  }
+  playhead.addEventListener('pointerdown', function (ev) {
+    dragging = true; playhead.setPointerCapture(ev.pointerId); ev.preventDefault();
+  });
+  playhead.addEventListener('pointermove', function (ev) {
+    if (dragging) setPos(posFromClient(ev.clientX), true);
+  });
+  playhead.addEventListener('pointerup', function () { dragging = false; demo.classList.remove('scrubbing'); });
+  track.addEventListener('pointerdown', function (ev) {
+    if (ev.target === track || ev.target === fill) setPos(posFromClient(ev.clientX), false);
+  });
+  playhead.addEventListener('keydown', function (ev) {
+    if (ev.key === 'ArrowLeft') { setPos(pos - 1, false); ev.preventDefault(); }
+    if (ev.key === 'ArrowRight') { setPos(pos + 1, false); ev.preventDefault(); }
+  });
+
+  setPos(n - 1, false);
+})();
+</script>

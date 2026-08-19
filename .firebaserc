@@ -1,0 +1,12 @@
+{
+  "projects": {
+    "default": "advvqa-firebase"
+  },
+  "targets": {
+    "advvqa-firebase": {
+      "hosting": {
+        "versions": ["advvqa-versions"]
+      }
+    }
+  }
+}
