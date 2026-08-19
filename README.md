@@ -50,19 +50,19 @@ same editor allowlist as the review panel.
 
 ## Deploy
 
-Firebase Hosting site `advvqa-versions` in project `advvqa-firebase`, with
+Firebase Hosting site `advvqa-light-table` in project `advvqa-firebase`, with
 `/api/**` rewritten to the `advvqa` Cloud Run service (same-origin, no CORS).
 
 One-time setup:
 
 ```bash
-firebase hosting:sites:create advvqa-versions --project advvqa-firebase
+firebase hosting:sites:create advvqa-light-table --project advvqa-firebase
 ```
 
 Then:
 
 ```bash
-npm run deploy       # builds and deploys hosting:versions
+npm run deploy       # builds and deploys hosting:lighttable
 ```
 
 The backend must be redeployed from AdvVQA_Interface once the
