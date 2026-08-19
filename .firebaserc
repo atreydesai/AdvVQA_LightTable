@@ -5,8 +5,11 @@
   "targets": {
     "advvqa-firebase": {
       "hosting": {
-        "versions": ["advvqa-versions"]
+        "versions": [
+          "advvqa-versions"
+        ]
       }
     }
-  }
+  },
+  "etags": {}
 }
