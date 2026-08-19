@@ -72,6 +72,15 @@ export interface TimelineEntry {
   is_correct?: boolean | null;
   is_abstain?: boolean | null;
   answer_text?: string | null;
+  normalized_answer?: string | null;
+  response_text?: string | null;
+  reasoning?: string | null;
+  decision?: string | null;
+  confidence?: number | string | null;
+  latency_ms?: number | null;
+  prompt_version?: string | null;
+  status?: string | null;
+  error?: string | null;
   buzz_point?: number | null;
   buzz_status?: string | null;
 }

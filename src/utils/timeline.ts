@@ -27,6 +27,8 @@ export interface SlotVisualState {
   /** true when the current timeline entry is this slot's revision */
   justChanged: boolean;
   verdict: { model?: string | null; is_correct?: boolean | null; is_abstain?: boolean | null } | null;
+  /** full timeline entry of the latest model run at/before t, trace included */
+  lastRun: TimelineEntry | null;
 }
 
 /**
@@ -54,9 +56,11 @@ export function stateAt(history: SessionHistory, entry: TimelineEntry | null): M
     }
 
     let verdict: SlotVisualState['verdict'] = null;
+    let lastRun: TimelineEntry | null = null;
     for (const run of history.timeline) {
       if (run.kind === 'vlm' && run.slot_index === slot.slot_index && run.t <= t && run.model) {
         verdict = { model: run.model, is_correct: run.is_correct, is_abstain: run.is_abstain };
+        lastRun = run;
       }
     }
 
@@ -66,6 +70,7 @@ export function stateAt(history: SessionHistory, entry: TimelineEntry | null): M
       totalRevisions: revisions.length,
       justChanged,
       verdict,
+      lastRun,
     });
   }
   return result;

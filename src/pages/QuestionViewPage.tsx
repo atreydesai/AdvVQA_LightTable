@@ -3,6 +3,7 @@ import { Link, useParams, useSearchParams } from 'react-router-dom';
 import TimelineScrubber from '../components/TimelineScrubber';
 import VerdictBadge from '../components/VerdictBadge';
 import DiffView from '../components/DiffView';
+import ModelTrace from '../components/ModelTrace';
 import { getSessionHistory, prefetchImages } from '../services/versioning';
 import type { SessionHistory, Slot, TimelineKind } from '../types';
 import { contentSlots, filterTimeline, slotLabel, stateAt } from '../utils/timeline';
@@ -295,6 +296,8 @@ function RegularView(props: {
                 </div>
               )}
             </div>
+
+            <ModelTrace run={st?.lastRun ?? null} />
 
             <DiffView
               title={`Clue · ${slotLabel(active, session.slots, session.question_type)}`}
